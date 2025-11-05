@@ -298,6 +298,7 @@ def setup_opengl():
     try:
         texture_ids['wall'] = load_texture('wall.png')
         texture_ids['floor'] = load_texture('floor.png')
+        texture_ids['sky'] = load_texture('sky.png')
         texture_ids['enemy'] = load_texture('enemy.png')
         
         # Cargar animación de ataque
@@ -379,15 +380,7 @@ def draw_map():
     glTexCoord2f(MAP_WIDTH, MAP_HEIGHT); glVertex3f(MAP_WIDTH, -1, MAP_HEIGHT)
     glTexCoord2f(0, MAP_HEIGHT); glVertex3f(0, -1, MAP_HEIGHT)
     glEnd()
-
-    # Dibujar techo (usando la misma textura del suelo)
-    glBegin(GL_QUADS)
-    glTexCoord2f(0, 0); glVertex3f(0, 1, 0)
-    glTexCoord2f(MAP_WIDTH, 0); glVertex3f(MAP_WIDTH, 1, 0)
-    glTexCoord2f(MAP_WIDTH, MAP_HEIGHT); glVertex3f(MAP_WIDTH, 1, MAP_HEIGHT)
-    glTexCoord2f(0, MAP_HEIGHT); glVertex3f(0, 1, MAP_HEIGHT)
-    glEnd()
-
+    
     # --- Dibujar Paredes como Planos ---
     # Solo se dibujan las caras que dan a un espacio vacío (optimizacón)
     glBindTexture(GL_TEXTURE_2D, texture_ids['wall'])
@@ -424,6 +417,40 @@ def draw_map():
                     glTexCoord2f(0, 1); glVertex3f(col + 1, 1, row)
     glEnd()
     
+def draw_sky():
+    """Dibuja un cilindro grande alrededor del jugador para simular el cielo."""
+    glPushMatrix()
+    
+    # Centrar el cielo en la posición X, Z del jugador para que parezca infinito
+    glTranslatef(player_pos[0], 0, player_pos[2])
+    
+    # Mover el cilindro hacia arriba para que el "horizonte" del cielo se vea más alto
+    glTranslatef(0, 1, 0)
+    
+    glBindTexture(GL_TEXTURE_2D, texture_ids['sky'])
+    
+    # Deshabilitar la escritura en el buffer de profundidad para que el cielo siempre esté detrás
+    glDepthMask(GL_FALSE)
+    
+    quad = gluNewQuadric()
+    gluQuadricTexture(quad, GL_TRUE)
+    
+    # Rotar el cilindro 90 grados para que la textura se mapee correctamente en el interior
+    glRotatef(-90, 1, 0, 0)
+    
+    # Dibujar un cilindro grande. El radio debe ser menor que el plano de recorte lejano (far clipping plane).
+    # Usamos 40, que es menor que 100.0 definido en gluPerspective.
+    # La altura del cilindro será la altura de nuestro "cielo".
+    gluCylinder(quad, 40.0, 40.0, 30.0, 32, 1)
+    
+    gluDeleteQuadric(quad)
+    
+    # Volver a habilitar la escritura en el buffer de profundidad para el resto de la escena
+    glDepthMask(GL_TRUE)
+    
+    glPopMatrix()
+
+
 def draw_entities():
     """Dibuja todas las entidades dinámicas (enemigos, proyectiles)."""
     for enemy in enemies:
@@ -640,6 +667,13 @@ def main():
     # Cargar fuente para el HUD
     hud_font = pygame.font.SysFont('Arial', 30, True)
 
+    # Cargar y reproducir música de fondo
+    try:
+        pygame.mixer.music.load('music.wav')
+        pygame.mixer.music.play(-1)  # El argumento -1 hace que la música se repita indefinidamente
+    except pygame.error as e:
+        print(f"No se pudo cargar o reproducir music.wav: {e}")
+
     # Cargar sonido de disparo
     try:
         shot_sound = pygame.mixer.Sound('shot.wav')
@@ -690,8 +724,10 @@ def main():
                 if event.key == K_p:
                     if game_state == "RUNNING":
                         game_state = "PAUSED"
+                        pygame.mixer.music.pause()
                     elif game_state == "PAUSED":
                         game_state = "RUNNING"
+                        pygame.mixer.music.unpause()
                 
                 # --- Lógica de Reaparición ---
                 if event.key == K_RETURN and game_state == "GAME_OVER":
@@ -851,6 +887,9 @@ def main():
             look_at_x, player_pos[1], look_at_z,          # Punto al que se mira
             0, 1, 0                                       # Vector "arriba"
         )
+
+        # Dibujar el cielo primero para que esté en el fondo
+        draw_sky()
 
         # Dibujar el mundo estático
         draw_map()
