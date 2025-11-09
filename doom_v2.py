@@ -10,44 +10,25 @@ import random
 SCREEN_WIDTH, SCREEN_HEIGHT = 1024, 768
 
 # --- Constantes del Juego ---
-MOVE_SPEED = 0.08
+MOVE_SPEED = 0.12
 ROT_SPEED = 0.04
 ENEMY_SPAWN_INTERVAL = 5000 # ms (5 segundos)
-MAX_ENEMIES = 10
+PLAYER_SHOT_DAMAGE = 50
+ENEMY_PROJECTILE_DAMAGE = 20
+MAX_ENEMIES = 15
 
 # --- Mapa del Mundo ---
 # 1 = Pared, 0 = Espacio vacío
-world_map = [
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1],
-    [1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1],
-    [1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-]
+world_map = []
 
-MAP_WIDTH = len(world_map[0])
-MAP_HEIGHT = len(world_map)
+MAP_WIDTH = len(world_map[0]) if world_map else 32
+MAP_HEIGHT = len(world_map) if world_map else 20
 
 # --- Variables Globales del Jugador ---
 player_pos = [2.5, 0.0, 2.5]  # x, y, z
 player_angle = 0.0  # Ángulo de visión en el plano XZ
 player_health = 100
-player_radius = 0.3
+player_radius = 0.6
 score = 0
 game_state = "RUNNING" # Estados posibles: RUNNING, PAUSED, GAME_OVER
 
@@ -57,8 +38,12 @@ player_clip_size = 10
 is_reloading = False
 reload_duration = 2000 # ms (2 segundos)
 reload_timer = 0
-shoot_cooldown = 250 # ms (0.25 segundos)
+shoot_cooldown = 240 # ms (0.24 segundos)
 last_shot_time = 0
+
+# --- Efectos Visuales ---
+player_hit_timer = 0
+player_hit_duration = 300 # ms (0.3 segundos)
 
 # --- Listas de Entidades ---
 enemies = []
@@ -89,10 +74,10 @@ class Enemy:
         self.pos = list(pos)
         self.health = 100
         self.alive = True
-        self.size = 0.4 # Radio para colisión de disparo
+        self.size = 0.5 # Radio para colisión de disparo
         self.path_points = None
         self.path_progress = 0.0
-        self.path_speed = 0.003
+        self.path_speed = 0.004
         self.shoot_cooldown = 2000 # ms
         self.last_shot_time = 0
         self.animation_state = 'IDLE' # IDLE, ATTACKING
@@ -243,6 +228,26 @@ def calculate_bezier_point(t, p0, p1, p2, p3):
     p_p3 = vec_mul_scalar(p3, ttt)
     p = vec_add(vec_add(p_p0, p_p1), vec_add(p_p2, p_p3))
     return p
+
+# --- Funciones de Generación de Mundo ---
+def generate_random_map(width, height, wall_density=0.15):
+
+    # Comienza con una cuadrícula de espacios vacíos y un borde de paredes.
+    game_map = [[0 for _ in range(width)] for _ in range(height)]
+    for y in range(height):
+        for x in range(width):
+            if x == 0 or x == width - 1 or y == 0 or y == height - 1:
+                game_map[y][x] = 1
+            elif random.random() < wall_density:
+                game_map[y][x] = 1
+
+    # Asegura que el área de inicio del jugador esté despejada
+    start_x, start_z = int(player_pos[0]), int(player_pos[2])
+    clear_radius = 2 # Despeja un área de 5x5 alrededor del jugador
+    for y in range(max(1, start_z - clear_radius), min(height - 1, start_z + clear_radius + 1)):
+        for x in range(max(1, start_x - clear_radius), min(width - 1, start_x + clear_radius + 1)):
+            game_map[y][x] = 0
+    return game_map
 
 # --- Funciones de Carga y Configuración ---
 def load_gif_animation(filename):
@@ -450,7 +455,6 @@ def draw_sky():
     
     glPopMatrix()
 
-
 def draw_entities():
     """Dibuja todas las entidades dinámicas (enemigos, proyectiles)."""
     for enemy in enemies:
@@ -638,10 +642,50 @@ def draw_weapon():
     glPopMatrix()
     glMatrixMode(GL_MODELVIEW)
 
+def draw_hit_pulse():
+    """Dibuja un pulso rojo en la pantalla cuando el jugador es golpeado."""
+    global player_hit_timer
+    
+    current_time = pygame.time.get_ticks()
+    elapsed = current_time - player_hit_timer
+    
+    if elapsed < player_hit_duration:
+        # Calcular la opacidad (alfa) basada en el tiempo transcurrido.
+        # Comienza fuerte y se desvanece.
+        alpha = 0.6 * (1.0 - (elapsed / player_hit_duration))
+        
+        glMatrixMode(GL_PROJECTION)
+        glPushMatrix()
+        glLoadIdentity()
+        gluOrtho2D(0, SCREEN_WIDTH, 0, SCREEN_HEIGHT)
+
+        glMatrixMode(GL_MODELVIEW)
+        glPushMatrix()
+        glLoadIdentity()
+
+        glDisable(GL_DEPTH_TEST)
+        glDisable(GL_TEXTURE_2D)
+        glEnable(GL_BLEND)
+
+        glColor4f(1.0, 0.0, 0.0, alpha) # Rojo con alfa variable
+        glBegin(GL_QUADS)
+        glVertex2f(0, 0)
+        glVertex2f(SCREEN_WIDTH, 0)
+        glVertex2f(SCREEN_WIDTH, SCREEN_HEIGHT)
+        glVertex2f(0, SCREEN_HEIGHT)
+        glEnd()
+
+        glPopMatrix()
+        glMatrixMode(GL_PROJECTION)
+        glPopMatrix()
+        glMatrixMode(GL_MODELVIEW)
+
 # --- Lógica Principal del Juego ---
 def reset_game():
     """Reinicia el estado del juego a sus valores iniciales."""
-    global player_health, player_pos, score, enemies, projectiles, game_state, player_clip_ammo, is_reloading, weapon_animation_state
+    global world_map, player_health, player_pos, score, enemies, projectiles, game_state, player_clip_ammo, is_reloading, weapon_animation_state
+    
+    world_map = generate_random_map(MAP_WIDTH, MAP_HEIGHT)
     player_health = 100
     player_pos = [2.5, 0.0, 2.5]
     score = 0
@@ -654,7 +698,7 @@ def reset_game():
 
 def main():
     """Bucle principal del juego."""
-    global player_pos, player_angle, player_health, score, game_state, player_clip_ammo, is_reloading, reload_timer, last_shot_time, death_sound, weapon_animation_state, weapon_animation_frame, weapon_animation_timer, reload_animation_frame, reload_animation_timer
+    global player_pos, player_angle, player_health, score, game_state, player_clip_ammo, is_reloading, reload_timer, last_shot_time, death_sound, weapon_animation_state, weapon_animation_frame, weapon_animation_timer, reload_animation_frame, reload_animation_timer, player_hit_timer
     global shot_sound, enemy_hit_sound, player_hit_sound, enemy_shot_sound, enemies, projectiles
 
     pygame.init()
@@ -773,7 +817,7 @@ def main():
                             if dist_perp < enemy.size and projection > 0:
                                 if enemy_hit_sound:
                                     enemy_hit_sound.play()
-                                enemy.health -= 50
+                                enemy.health -= PLAYER_SHOT_DAMAGE
                                 if enemy.health <= 0:
                                     enemy.alive = False
                                     score += 100
@@ -825,7 +869,8 @@ def main():
                 # Colisión proyectil-jugador (círculo-círculo)
                 if vec_norm(vec_sub(proj.pos, player_pos_list)) < player_radius + proj.radius:
                     proj.alive = False
-                    player_health -= 25
+                    player_health -= ENEMY_PROJECTILE_DAMAGE
+                    player_hit_timer = current_time # Activar el pulso rojo
                     if player_hit_sound: player_hit_sound.play()
                     if player_health <= 0 and game_state != "GAME_OVER":
                         game_state = "GAME_OVER"
@@ -896,6 +941,9 @@ def main():
         
         # Dibujar entidades dinámicas
         draw_entities()
+
+        # Dibujar pulso de daño si es necesario
+        draw_hit_pulse()
 
         # Dibujar el arma (HUD 3D)
         draw_weapon()
