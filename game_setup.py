@@ -2,9 +2,9 @@ import pygame
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from PIL import Image
+
 import random
 import maps
-
 import config
 
 # Funciones de generación de mundo
@@ -80,6 +80,8 @@ def setup_opengl():
         config.texture_ids['floor'] = load_texture('floor.png')
         config.texture_ids['sky'] = load_texture('sky.png')
         config.texture_ids['enemy'] = load_texture('enemy.png')
+        config.texture_ids['shells'] = load_texture('shells.png')
+        config.texture_ids['boxshells'] = load_texture('boxshells.png')
         
         config.enemy_attack_frames = load_gif_animation('enemy_attack.gif')
         config.reload_frames = load_gif_animation('reload.gif')

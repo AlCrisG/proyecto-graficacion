@@ -7,7 +7,7 @@ import random
  
 import config
 from utils import vec_sub, vec_mul_scalar, vec_norm, vec_dot, vec_add
-from entities import Enemy
+from entities import Enemy, Pickup
 from game_setup import setup_opengl, select_next_random_map
 from rendering import (draw_sky, draw_map, draw_entities, draw_hit_pulse,
                      draw_weapon, draw_crosshair, draw_hud)
@@ -21,22 +21,20 @@ def start_next_level():
         config.player_health = 100
         config.enemies.clear()
         config.projectiles.clear()
-        config.player_clip_ammo = config.player_clip_size
-        config.is_reloading = False
+        config.pickups.clear()
 
 # Lógica principal del juego
 def reset_game():
     """Reinicia el estado del juego a sus valores iniciales"""
     config.completed_levels.clear()
     start_next_level()
-    config.player_health = 1000
+    config.player_health = 100
     config.score = 0
     config.enemies.clear()
     config.projectiles.clear()
     config.game_state = "RUNNING"
     config.weapon_animation_state = 'IDLE'
-    config.player_clip_ammo = config.player_clip_size
-    config.is_reloading = False
+    config.player_ammo = 20
 
 def main():
     """Bucle principal del juego"""
@@ -116,23 +114,14 @@ def main():
                 if event.key == K_RETURN and config.game_state == "GAME_OVER":
                     reset_game()
                 
-                # Lógica de recarga manual
-                if event.key == K_r and config.game_state == "RUNNING" and not config.is_reloading:
-                    if config.player_clip_ammo < config.player_clip_size:
-                        config.is_reloading = True
-                        config.weapon_animation_state = 'RELOADING'
-                        config.reload_timer = pygame.time.get_ticks()
-                        config.reload_animation_timer = config.reload_timer
-                        config.reload_animation_frame = 0
-
                 # Lógica de disparo
-                if event.key == K_SPACE and config.game_state == "RUNNING" and not config.is_reloading:
-                    if config.player_clip_ammo > 0 and pygame.time.get_ticks() - config.last_shot_time > config.shoot_cooldown:
+                if event.key == K_SPACE and config.game_state == "RUNNING":
+                    if config.player_ammo > 0 and pygame.time.get_ticks() - config.last_shot_time > config.shoot_cooldown:
                         if config.shot_sound:
                             config.shot_sound.play()
                             
                         config.last_shot_time = current_time
-                        config.player_clip_ammo -= 1
+                        config.player_ammo -= 1
 
                         ray_dir = [math.cos(config.player_angle), 0, math.sin(config.player_angle)]
 
@@ -160,6 +149,14 @@ def main():
                                 if enemy.health <= 0:
                                     enemy.alive = False
                                     config.score += 100
+                                    # Probabilidad de soltar munición
+                                    if random.random() < 0.6 and config.player_ammo < 40: # 60% de probabilidad de soltar algo
+                                        if random.random() < 0.75: # 75% de que sean balas normales
+                                            pickup_type = 'shells'
+                                        else: # 25% de que sea una caja
+                                            pickup_type = 'boxshells'
+                                        # Crear el objeto en la posición del enemigo
+                                        config.pickups.append(Pickup(enemy.pos, pickup_type))
                                     enemy.path_points = None 
                                 break # La bala solo golpea a un enemigo
 
@@ -169,7 +166,7 @@ def main():
             config.score = 0 # Reiniciar puntuación para el siguiente nivel
             start_next_level()
 
-        # Lógica del Juego (solo si no está pausado o terminado)
+        # Lógica del juego
         if config.game_state == "RUNNING":
             keys = pygame.key.get_pressed()
             
@@ -214,7 +211,7 @@ def main():
                 # Colisión del proyectil con el jugador
                 if vec_norm(vec_sub(proj.pos, player_pos_list)) < config.player_radius + proj.radius:
                     proj.alive = False
-                    config.player_health -= config.ENEMY_PROJECTILE_DAMAGE
+                    config.player_health -= random.randint(15, 25)
                     config.player_hit_timer = current_time # Activar el pulso rojo
                     if config.player_hit_sound: config.player_hit_sound.play()
                     if config.player_health <= 0 and config.game_state != "GAME_OVER":
@@ -224,6 +221,20 @@ def main():
 
             # Limpiar proyectiles muertos
             config.projectiles[:] = [p for p in config.projectiles if p.alive]
+
+            # Lógica de recolección de objetos
+            for pickup in config.pickups:
+                if not pickup.alive: continue
+                
+                if vec_norm(vec_sub(pickup.pos, player_pos_list)) < config.player_radius + pickup.size:
+                    pickup.alive = False
+                    if pickup.type == 'shells':
+                        config.player_ammo += 4
+                    elif pickup.type == 'boxshells':
+                        config.player_ammo += 20
+            
+            # Limpiar objetos recogidos
+            config.pickups[:] = [p for p in config.pickups if p.alive]
 
             # Generación de enemigos
             if current_time - enemy_spawn_timer > config.ENEMY_SPAWN_INTERVAL:
@@ -237,24 +248,13 @@ def main():
                             break
                 enemy_spawn_timer = current_time
 
-            # Lógica de recarga
-            if config.is_reloading and current_time - config.reload_timer > config.reload_duration:
-                config.is_reloading = False
-                config.player_clip_ammo = config.player_clip_size
-                if config.weapon_animation_state == 'RELOADING':
-                    config.weapon_animation_state = 'IDLE'
-
             # Lógica de animación del arma
             if config.weapon_animation_state == 'SHOOTING':
                 if current_time - config.weapon_animation_timer > config.weapon_animation_speed:
                     config.weapon_animation_frame += 1
-                    if config.weapon_animation_frame >= 8: # La animación de disparo dura 8 frames
+                    if config.weapon_animation_frame >= 55:
                         config.weapon_animation_state = 'IDLE'
                     config.weapon_animation_timer = current_time
-            elif config.weapon_animation_state == 'RELOADING':
-                if current_time - config.reload_animation_timer > config.reload_animation_speed:
-                    config.reload_animation_frame += 1
-                    config.reload_animation_timer = current_time
 
             # Detección de colisiones del jugador
             new_pos_x = config.player_pos[0] + dx

@@ -123,3 +123,11 @@ class Projectile:
         self.speed = 0.15
         self.alive = True
         self.radius = 0.15
+
+class Pickup:
+    def __init__(self, pos, pickup_type):
+        self.pos = list(pos)
+        self.type = pickup_type # shells o boxshells
+        self.alive = True
+        self.size = 0.2 # Radio para colisión
+        self.pos[1] = -0.5 

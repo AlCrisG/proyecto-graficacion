@@ -6,7 +6,7 @@ import config
 
 # Funciones de renderizado
 def draw_enemy(enemy):
-    """Dibuja un enemigo como un sprite 2D que mira a la cámara"""
+    """Dibuja un enemigo"""
     if not enemy.alive:
         return
 
@@ -62,8 +62,38 @@ def draw_projectile(projectile):
     glColor3f(1.0, 1.0, 1.0) # Restaurar el color a blanco
     glPopMatrix()
 
+def draw_pickup(pickup):
+    """Dibuja un objeto recogible"""
+    if not pickup.alive:
+        return
+
+    glPushMatrix()
+    glTranslatef(pickup.pos[0], pickup.pos[1], pickup.pos[2])
+
+    modelview = glGetFloatv(GL_MODELVIEW_MATRIX)
+    for i in range(3):
+        for j in range(3):
+            if i == j:
+                modelview[i][j] = 1.0
+            else:
+                modelview[i][j] = 0.0
+    glLoadMatrixf(modelview)
+
+    # Usar la textura correspondiente al tipo de objeto
+    glBindTexture(GL_TEXTURE_2D, config.texture_ids[pickup.type])
+
+    glBegin(GL_QUADS)
+    s = pickup.size
+    glTexCoord2f(0, 0); glVertex3f(-s, -s, 0)
+    glTexCoord2f(1, 0); glVertex3f(s, -s, 0)
+    glTexCoord2f(1, 1); glVertex3f(s, s, 0)
+    glTexCoord2f(0, 1); glVertex3f(-s, s, 0)
+    glEnd()
+
+    glPopMatrix()
+
 def draw_map():
-    """Dibuja el suelo, el techo y las paredes del mapa"""
+    """Dibuja el suelo y las paredes del mapa"""
     # Dibujar suelo
     glBindTexture(GL_TEXTURE_2D, config.texture_ids['floor'])
     glBegin(GL_QUADS)
@@ -150,8 +180,11 @@ def draw_entities():
     for projectile in config.projectiles:
         draw_projectile(projectile)
 
+    for pickup in config.pickups:
+        draw_pickup(pickup)
+
 def draw_crosshair():
-    """Dibuja una mira 2D en el centro de la pantalla"""
+    """Dibuja una mira en el centro de la pantalla"""
     glMatrixMode(GL_PROJECTION)
     glPushMatrix()
     glLoadIdentity()
@@ -199,7 +232,7 @@ def draw_hud(font):
     glDisable(GL_TEXTURE_2D)
     glDisable(GL_DEPTH_TEST)
 
-    health_text = f"SALUD: {int(config.player_health)}"
+    health_text = f"SALUD: {max(int(config.player_health), 0)}"
     text_surface = font.render(health_text, True, (255, 0, 0), (0, 0, 0, 0))
     text_data = pygame.image.tostring(text_surface, "RGBA", True)
 
@@ -207,7 +240,7 @@ def draw_hud(font):
     score_surface = font.render(score_text, True, (255, 255, 0), (0, 0, 0, 0))
     score_data = pygame.image.tostring(score_surface, "RGBA", True)
 
-    ammo_text = f"MUNICIÓN: {config.player_clip_ammo} / {config.player_clip_size}"
+    ammo_text = f"MUNICIÓN: {config.player_ammo}"
     ammo_surface = font.render(ammo_text, True, (255, 255, 255), (0, 0, 0, 0))
     ammo_data = pygame.image.tostring(ammo_surface, "RGBA", True)
     
@@ -287,15 +320,8 @@ def draw_weapon():
     
     if config.reload_frames: # Solo intentar si la animación de recarga se cargó
         if config.weapon_animation_state == 'SHOOTING':
-            # Animación de disparo: usa los primeros 8 frames (índices 0-7)
-            frame_index = min(config.weapon_animation_frame, 7)
-            frame_texture_id = config.reload_frames[min(frame_index, len(config.reload_frames) - 1)]
-        elif config.weapon_animation_state == 'RELOADING':
-            # Animación de recarga: usa los frames 10 a 55 (índices 9-54)
-            start_frame = 9
-            end_frame = 54
-            num_frames = end_frame - start_frame + 1
-            frame_index = start_frame + (config.reload_animation_frame % num_frames)
+            # La animación de disparo ahora usa toda la secuencia
+            frame_index = min(config.weapon_animation_frame, len(config.reload_frames) - 1)
             frame_texture_id = config.reload_frames[min(frame_index, len(config.reload_frames) - 1)]
         else: # IDLE
             frame_texture_id = config.reload_frames[0]
