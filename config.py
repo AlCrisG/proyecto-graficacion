@@ -34,6 +34,7 @@ projectiles = []
 pickups = []
 
 # Sonido
+music = None
 shot_sound = None
 enemy_hit_sound = None
 player_hit_sound = None
@@ -48,3 +49,7 @@ weapon_animation_state = 'IDLE' # IDLE, SHOOTING, RELOADING
 weapon_animation_frame = 0
 weapon_animation_timer = 0
 weapon_animation_speed = 30
+
+# Mapa de iluminación para optimización
+light_map = []
+base_ambient = 0.5 # Nivel de luz ambiental base para el mapa

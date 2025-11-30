@@ -1,6 +1,7 @@
 import pygame
 from OpenGL.GL import *
 from OpenGL.GLU import *
+import math
 
 import config
 
@@ -92,52 +93,92 @@ def draw_pickup(pickup):
 
     glPopMatrix()
 
+def update_light_map(light_radius=5.0, base_ambient=0.3):
+    """
+    Calcula la iluminación de todo el mapa
+    Primero reinicia el mapa de luz y luego agrega la luz de cada proyectil
+    """
+    # 1. Reiniciar el mapa de luz a la luz ambiental base
+    for z in range(config.MAP_HEIGHT + 1):
+        for x in range(config.MAP_WIDTH + 1):
+            config.light_map[z][x] = base_ambient
+
+    # 2. Iterar sobre los proyectiles y aplicar su luz a los vértices cercanos
+    for projectile in config.projectiles:
+        if not projectile.alive:
+            continue
+
+        # Determinar el área de influencia (bounding box) del proyectil
+        min_x = max(0, int(projectile.pos[0] - light_radius))
+        max_x = min(config.MAP_WIDTH, int(projectile.pos[0] + light_radius))
+        min_z = max(0, int(projectile.pos[2] - light_radius))
+        max_z = min(config.MAP_HEIGHT, int(projectile.pos[2] + light_radius))
+
+        # Iterar solo sobre los vértices dentro del área de influencia
+        for z in range(min_z, max_z + 1):
+            for x in range(min_x, max_x + 1):
+                vertex_pos = (x, -1, z)
+                dist_sq = (vertex_pos[0] - projectile.pos[0])**2 + (vertex_pos[2] - projectile.pos[2])**2
+                
+                if dist_sq < light_radius**2:
+                    distance = math.sqrt(dist_sq)
+                    light_intensity = (1.0 - (distance / light_radius))
+                    config.light_map[z][x] += light_intensity
+                    # Limitar la luz a un máximo de 1.0
+                    if config.light_map[z][x] > 1.0:
+                        config.light_map[z][x] = 1.0
+
 def draw_map():
     """Dibuja el suelo y las paredes del mapa"""
-    # Dibujar suelo
     glBindTexture(GL_TEXTURE_2D, config.texture_ids['floor'])
     glBegin(GL_QUADS)
-    glTexCoord2f(0, 0); glVertex3f(0, -1, 0)
-    glTexCoord2f(config.MAP_WIDTH, 0); glVertex3f(config.MAP_WIDTH, -1, 0)
-    glTexCoord2f(config.MAP_WIDTH, config.MAP_HEIGHT); glVertex3f(config.MAP_WIDTH, -1, config.MAP_HEIGHT)
-    glTexCoord2f(0, config.MAP_HEIGHT); glVertex3f(0, -1, config.MAP_HEIGHT)
+    for z in range(config.MAP_HEIGHT):
+        for x in range(config.MAP_WIDTH):
+            if config.world_map[z][x] == 0:
+                # Leer la iluminación precalculada del light_map
+                l1 = config.light_map[z][x]; l2 = config.light_map[z][x+1]; l3 = config.light_map[z+1][x+1]; l4 = config.light_map[z+1][x]
+                
+                glColor3f(l1, l1, l1); glTexCoord2f(x, z); glVertex3f(x, -1, z)
+                glColor3f(l2, l2, l2); glTexCoord2f(x + 1, z); glVertex3f(x + 1, -1, z)
+                glColor3f(l3, l3, l3); glTexCoord2f(x + 1, z + 1); glVertex3f(x + 1, -1, z + 1)
+                glColor3f(l4, l4, l4); glTexCoord2f(x, z + 1); glVertex3f(x, -1, z + 1)
     glEnd()
     
-    # Dibujar paredes como planos
-    # Solo se dibujan las caras que dan a un espacio vacío
     glBindTexture(GL_TEXTURE_2D, config.texture_ids['wall'])
     glBegin(GL_QUADS)
     for row in range(config.MAP_HEIGHT):
         for col in range(config.MAP_WIDTH):
             if config.world_map[row][col] == 1:
-                # Comprobar vecino del NORTE (z-1)
                 if row > 0 and config.world_map[row - 1][col] == 0:
-                    glTexCoord2f(0, 0); glVertex3f(col, -1, row)
-                    glTexCoord2f(1, 0); glVertex3f(col + 1, -1, row)
-                    glTexCoord2f(1, 1); glVertex3f(col + 1, 1, row)
-                    glTexCoord2f(0, 1); glVertex3f(col, 1, row)
+                    l1 = config.light_map[row][col]; l2 = config.light_map[row][col+1]
+                    glColor3f(l1, l1, l1); glTexCoord2f(0, 0); glVertex3f(col, -1, row)
+                    glColor3f(l2, l2, l2); glTexCoord2f(1, 0); glVertex3f(col + 1, -1, row)
+                    glColor3f(l2, l2, l2); glTexCoord2f(1, 1); glVertex3f(col + 1, 1, row)
+                    glColor3f(l1, l1, l1); glTexCoord2f(0, 1); glVertex3f(col, 1, row)
 
-                # Comprobar vecino del SUR (z+1)
                 if row < config.MAP_HEIGHT - 1 and config.world_map[row + 1][col] == 0:
-                    glTexCoord2f(0, 0); glVertex3f(col + 1, -1, row + 1)
-                    glTexCoord2f(1, 0); glVertex3f(col, -1, row + 1)
-                    glTexCoord2f(1, 1); glVertex3f(col, 1, row + 1)
-                    glTexCoord2f(0, 1); glVertex3f(col + 1, 1, row + 1)
+                    l1 = config.light_map[row+1][col+1]; l2 = config.light_map[row+1][col]
+                    glColor3f(l1, l1, l1); glTexCoord2f(0, 0); glVertex3f(col + 1, -1, row + 1)
+                    glColor3f(l2, l2, l2); glTexCoord2f(1, 0); glVertex3f(col, -1, row + 1)
+                    glColor3f(l2, l2, l2); glTexCoord2f(1, 1); glVertex3f(col, 1, row + 1)
+                    glColor3f(l1, l1, l1); glTexCoord2f(0, 1); glVertex3f(col + 1, 1, row + 1)
 
-                # Comprobar vecino del OESTE (x-1)
                 if col > 0 and config.world_map[row][col - 1] == 0:
-                    glTexCoord2f(0, 0); glVertex3f(col, -1, row + 1)
-                    glTexCoord2f(1, 0); glVertex3f(col, -1, row)
-                    glTexCoord2f(1, 1); glVertex3f(col, 1, row)
-                    glTexCoord2f(0, 1); glVertex3f(col, 1, row + 1)
+                    l1 = config.light_map[row+1][col]; l2 = config.light_map[row][col]
+                    glColor3f(l1, l1, l1); glTexCoord2f(0, 0); glVertex3f(col, -1, row + 1)
+                    glColor3f(l2, l2, l2); glTexCoord2f(1, 0); glVertex3f(col, -1, row)
+                    glColor3f(l2, l2, l2); glTexCoord2f(1, 1); glVertex3f(col, 1, row)
+                    glColor3f(l1, l1, l1); glTexCoord2f(0, 1); glVertex3f(col, 1, row + 1)
 
-                # Comprobar vecino del ESTE (x+1)
                 if col < config.MAP_WIDTH - 1 and config.world_map[row][col + 1] == 0:
-                    glTexCoord2f(0, 0); glVertex3f(col + 1, -1, row)
-                    glTexCoord2f(1, 0); glVertex3f(col + 1, -1, row + 1)
-                    glTexCoord2f(1, 1); glVertex3f(col + 1, 1, row + 1)
-                    glTexCoord2f(0, 1); glVertex3f(col + 1, 1, row)
+                    l1 = config.light_map[row][col+1]; l2 = config.light_map[row+1][col+1]
+                    glColor3f(l1, l1, l1); glTexCoord2f(0, 0); glVertex3f(col + 1, -1, row)
+                    glColor3f(l2, l2, l2); glTexCoord2f(1, 0); glVertex3f(col + 1, -1, row + 1)
+                    glColor3f(l2, l2, l2); glTexCoord2f(1, 1); glVertex3f(col + 1, 1, row + 1)
+                    glColor3f(l1, l1, l1); glTexCoord2f(0, 1); glVertex3f(col + 1, 1, row)
     glEnd()
+    # Restaurar el color a blanco para el resto de los objetos
+    glColor3f(1.0, 1.0, 1.0)
     
 def draw_sky():
     """Dibuja un cilindro grande alrededor del jugador para simular el cielo"""

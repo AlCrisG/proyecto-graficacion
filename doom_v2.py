@@ -4,13 +4,13 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 import math
 import random
- 
+
 import config
 from utils import vec_sub, vec_mul_scalar, vec_norm, vec_dot, vec_add
 from entities import Enemy, Pickup
 from game_setup import setup_opengl, select_next_random_map
 from rendering import (draw_sky, draw_map, draw_entities, draw_hit_pulse,
-                     draw_weapon, draw_crosshair, draw_hud)
+                     draw_weapon, draw_crosshair, draw_hud, update_light_map)
 
 # Lógica de niveles
 def start_next_level():
@@ -277,6 +277,9 @@ def main():
             look_at_x, config.player_pos[1], look_at_z,          # Punto al que se mira
             0, 1, 0                                       # Vector arriba
         )
+
+        # Actualizar el mapa de luz de forma optimizada
+        update_light_map()
 
         # Dibujar el cielo primero para que esté en el fondo
         draw_sky()

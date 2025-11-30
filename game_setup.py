@@ -22,6 +22,10 @@ def select_next_random_map():
     config.player_pos = list(selected_map_data["start_pos"])
     config.MAP_HEIGHT = len(config.world_map)
     config.MAP_WIDTH = len(config.world_map[0]) if config.MAP_HEIGHT > 0 else 0
+
+    # Inicializar el mapa de luz con las dimensiones del mapa + 1 para los vértices
+    config.light_map = [[config.base_ambient for _ in range(config.MAP_WIDTH + 1)] 
+                        for _ in range(config.MAP_HEIGHT + 1)]
     
     return True # Se ha cargado un nuevo mapa con éxito
 
@@ -86,6 +90,6 @@ def setup_opengl():
         config.enemy_attack_frames = load_gif_animation('images/enemy_attack.gif')
         config.reload_frames = load_gif_animation('images/reload.gif')
     except FileNotFoundError as e:
-        print(f"Error: No se pudo encontrar: {e.filename}")
+        print(e.filename)
         pygame.quit()
         quit()
