@@ -50,38 +50,38 @@ def main():
 
     # Cargar y reproducir música de fondo
     try:
-        pygame.mixer.music.load('music.wav')
+        pygame.mixer.music.load('sounds/music.wav')
         pygame.mixer.music.play(-1)  # El argumento -1 hace que la música se repita indefinidamente
-    except pygame.error as e:
-        print(f"No se pudo cargar o reproducir music.wav: {e}")
+    except pygame.error:
+        pass  # El juego continuará sin música
 
     # Cargar sonido de disparo
     try:
-        config.shot_sound = pygame.mixer.Sound('shot.wav')
+        config.shot_sound = pygame.mixer.Sound('sounds/shot.wav')
     except pygame.error:
-        pass # El juego continuará sin sonido
+        pass
 
     # Cargar sonido de impacto en enemigo
     try:
-        config.enemy_hit_sound = pygame.mixer.Sound('enemy_hit.wav')
+        config.enemy_hit_sound = pygame.mixer.Sound('sounds/enemy_hit.wav')
     except pygame.error:
         pass
 
     # Cargar sonido de impacto en jugador
     try:
-        config.player_hit_sound = pygame.mixer.Sound('player_hit.wav')
+        config.player_hit_sound = pygame.mixer.Sound('sounds/player_hit.wav')
     except pygame.error:
         pass
 
     # Cargar sonido de disparo enemigo
     try:
-        config.enemy_shot_sound = pygame.mixer.Sound('enemy_shot.wav')
+        config.enemy_shot_sound = pygame.mixer.Sound('sounds/enemy_shot.wav')
     except pygame.error:
         pass
 
     # Cargar sonido de muerte
     try:
-        config.death_sound = pygame.mixer.Sound('death.wav')
+        config.death_sound = pygame.mixer.Sound('sounds/death.wav')
     except pygame.error:
         pass
 

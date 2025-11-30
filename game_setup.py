@@ -76,15 +76,15 @@ def setup_opengl():
 
     # Cargar texturas
     try:
-        config.texture_ids['wall'] = load_texture('wall.png')
-        config.texture_ids['floor'] = load_texture('floor.png')
-        config.texture_ids['sky'] = load_texture('sky.png')
-        config.texture_ids['enemy'] = load_texture('enemy.png')
-        config.texture_ids['shells'] = load_texture('shells.png')
-        config.texture_ids['boxshells'] = load_texture('boxshells.png')
+        config.texture_ids['wall'] = load_texture('images/wall.png')
+        config.texture_ids['floor'] = load_texture('images/floor.png')
+        config.texture_ids['sky'] = load_texture('images/sky.png')
+        config.texture_ids['enemy'] = load_texture('images/enemy.png')
+        config.texture_ids['shells'] = load_texture('images/shells.png')
+        config.texture_ids['boxshells'] = load_texture('images/boxshells.png')
         
-        config.enemy_attack_frames = load_gif_animation('enemy_attack.gif')
-        config.reload_frames = load_gif_animation('reload.gif')
+        config.enemy_attack_frames = load_gif_animation('images/enemy_attack.gif')
+        config.reload_frames = load_gif_animation('images/reload.gif')
     except FileNotFoundError as e:
         print(f"Error: No se pudo encontrar: {e.filename}")
         pygame.quit()
