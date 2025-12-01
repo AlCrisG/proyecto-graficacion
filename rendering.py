@@ -98,17 +98,17 @@ def update_light_map(light_radius=5.0, base_ambient=0.3):
     Calcula la iluminación de todo el mapa
     Primero reinicia el mapa de luz y luego agrega la luz de cada proyectil
     """
-    # 1. Reiniciar el mapa de luz a la luz ambiental base
+    # Reiniciar el mapa de luz a la luz ambiental base
     for z in range(config.MAP_HEIGHT + 1):
         for x in range(config.MAP_WIDTH + 1):
             config.light_map[z][x] = base_ambient
 
-    # 2. Iterar sobre los proyectiles y aplicar su luz a los vértices cercanos
+    # Iterar sobre los proyectiles y aplicar su luz a los vértices cercanos
     for projectile in config.projectiles:
         if not projectile.alive:
             continue
 
-        # Determinar el área de influencia (bounding box) del proyectil
+        # Determinar el área de influencia del proyectil
         min_x = max(0, int(projectile.pos[0] - light_radius))
         max_x = min(config.MAP_WIDTH, int(projectile.pos[0] + light_radius))
         min_z = max(0, int(projectile.pos[2] - light_radius))
@@ -124,7 +124,6 @@ def update_light_map(light_radius=5.0, base_ambient=0.3):
                     distance = math.sqrt(dist_sq)
                     light_intensity = (1.0 - (distance / light_radius))
                     config.light_map[z][x] += light_intensity
-                    # Limitar la luz a un máximo de 1.0
                     if config.light_map[z][x] > 1.0:
                         config.light_map[z][x] = 1.0
 
@@ -135,7 +134,6 @@ def draw_map():
     for z in range(config.MAP_HEIGHT):
         for x in range(config.MAP_WIDTH):
             if config.world_map[z][x] == 0:
-                # Leer la iluminación precalculada del light_map
                 l1 = config.light_map[z][x]; l2 = config.light_map[z][x+1]; l3 = config.light_map[z+1][x+1]; l4 = config.light_map[z+1][x]
                 
                 glColor3f(l1, l1, l1); glTexCoord2f(x, z); glVertex3f(x, -1, z)

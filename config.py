@@ -53,4 +53,4 @@ weapon_animation_speed = 30
 
 # Mapa de iluminación para optimización
 light_map = []
-base_ambient = 0.5 # Nivel de luz ambiental base para el mapa
+base_ambient = 0.7 # Nivel de luz ambiental base para el mapa
