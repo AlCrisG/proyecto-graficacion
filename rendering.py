@@ -289,6 +289,12 @@ def draw_hud(font):
     glDrawPixels(text_surface.get_width(), text_surface.get_height(), GL_RGBA, GL_UNSIGNED_BYTE, text_data)
 
     if config.player_health <= 0:
+        high_score_text = f"PUNTUACIÓN MÁXIMA: {config.high_score}"
+        high_score_surface = font.render(high_score_text, True, (255, 255, 0), (0, 0, 0, 0))
+        high_score_data = pygame.image.tostring(high_score_surface, "RGBA", True)
+        glRasterPos2d((config.SCREEN_WIDTH - high_score_surface.get_width()) / 2, (config.SCREEN_HEIGHT / 2) + 50)
+        glDrawPixels(high_score_surface.get_width(), high_score_surface.get_height(), GL_RGBA, GL_UNSIGNED_BYTE, high_score_data)
+
         game_over_text = "HAS MUERTO"
         text_surface = font.render(game_over_text, True, (255, 0, 0), (0, 0, 0, 0))
         text_data = pygame.image.tostring(text_surface, "RGBA", True)

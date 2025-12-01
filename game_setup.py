@@ -4,6 +4,7 @@ from OpenGL.GLU import *
 from PIL import Image
 
 import random
+import json
 import maps
 import config
 import sys
@@ -103,3 +104,22 @@ def setup_opengl():
         print(e.filename)
         pygame.quit()
         quit()
+
+def load_high_score():
+    """Carga la puntuación más alta desde un archivo JSON"""
+    try:
+        with open(ruta_recurso('highscore.json'), 'r') as f:
+            data = json.load(f)
+            config.high_score = data.get('high_score', 0)
+    except (FileNotFoundError, json.JSONDecodeError):
+        config.high_score = 0
+
+def save_high_score():
+    """Guarda la puntuación actual si es la más alta."""
+    if config.score > config.high_score:
+        config.high_score = config.score
+        try:
+            with open(ruta_recurso('highscore.json'), 'w') as f:
+                json.dump({'high_score': config.high_score}, f)
+        except IOError:
+            print("Error: No se pudo guardar la puntuación más alta.")

@@ -16,6 +16,7 @@ player_health = 100
 player_radius = 0.8
 score = 0
 game_state = "RUNNING" # RUNNING, PAUSED, GAME_OVER, VICTORY
+high_score = 0
 current_level = 0
 completed_levels = set()
 

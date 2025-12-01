@@ -10,8 +10,8 @@ import os
 import config
 from utils import vec_sub, vec_mul_scalar, vec_norm, vec_dot, vec_add
 from entities import Enemy, Pickup
-from game_setup import setup_opengl, select_next_random_map
-from rendering import (draw_sky, draw_map, draw_entities, draw_hit_pulse,
+from game_setup import setup_opengl, select_next_random_map, load_high_score, save_high_score
+from rendering import (draw_sky, draw_map, draw_entities, draw_hit_pulse, 
                      draw_weapon, draw_crosshair, draw_hud, update_light_map)
 
 def ruta_recurso(ruta_relativa):
@@ -37,6 +37,7 @@ def start_next_level():
 def reset_game():
     """Reinicia el estado del juego a sus valores iniciales"""
     config.completed_levels.clear()
+    load_high_score() # Cargar la puntuación más alta al inicio
     start_next_level()
     config.player_health = 100
     config.score = 0
@@ -171,10 +172,11 @@ def main():
                                 break # La bala solo golpea a un enemigo
 
         # Lógica de progresión de nivel
-        if config.score >= 1000 and config.game_state == "RUNNING":
+        # Cambia de nivel si la cantidad de "miles" en la puntuación es mayor que los niveles completados
+        if config.game_state == "RUNNING" and (config.score // 1000) > len(config.completed_levels):
             config.completed_levels.add(config.current_level)
-            config.score = 0 # Reiniciar puntuación para el siguiente nivel
             start_next_level()
+
 
         # Lógica del juego
         if config.game_state == "RUNNING":
@@ -227,6 +229,7 @@ def main():
                     if config.player_health <= 0 and config.game_state != "GAME_OVER":
                         config.game_state = "GAME_OVER"
                         if config.death_sound:
+                            save_high_score() # Guardar puntuación al morir
                             config.death_sound.play()
 
             # Limpiar proyectiles muertos
