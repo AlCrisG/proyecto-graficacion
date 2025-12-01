@@ -4,6 +4,8 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 import math
 import random
+import sys
+import os
 
 import config
 from utils import vec_sub, vec_mul_scalar, vec_norm, vec_dot, vec_add
@@ -11,6 +13,14 @@ from entities import Enemy, Pickup
 from game_setup import setup_opengl, select_next_random_map
 from rendering import (draw_sky, draw_map, draw_entities, draw_hit_pulse,
                      draw_weapon, draw_crosshair, draw_hud, update_light_map)
+
+def ruta_recurso(ruta_relativa):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, ruta_relativa)
 
 # Lógica de niveles
 def start_next_level():
@@ -50,38 +60,38 @@ def main():
 
     # Cargar y reproducir música de fondo
     try:
-        pygame.mixer.music.load('sounds/music.wav')
+        pygame.mixer.music.load(ruta_recurso('sounds/music.wav'))
         pygame.mixer.music.play(-1)  # El argumento -1 hace que la música se repita indefinidamente
     except pygame.error:
         pass  # El juego continuará sin música
 
     # Cargar sonido de disparo
     try:
-        config.shot_sound = pygame.mixer.Sound('sounds/shot.wav')
+        config.shot_sound = pygame.mixer.Sound(ruta_recurso('sounds/shot.wav'))
     except pygame.error:
         pass
 
     # Cargar sonido de impacto en enemigo
     try:
-        config.enemy_hit_sound = pygame.mixer.Sound('sounds/enemy_hit.wav')
+        config.enemy_hit_sound = pygame.mixer.Sound(ruta_recurso('sounds/enemy_hit.wav'))
     except pygame.error:
         pass
 
     # Cargar sonido de impacto en jugador
     try:
-        config.player_hit_sound = pygame.mixer.Sound('sounds/player_hit.wav')
+        config.player_hit_sound = pygame.mixer.Sound(ruta_recurso('sounds/player_hit.wav'))
     except pygame.error:
         pass
 
     # Cargar sonido de disparo enemigo
     try:
-        config.enemy_shot_sound = pygame.mixer.Sound('sounds/enemy_shot.wav')
+        config.enemy_shot_sound = pygame.mixer.Sound(ruta_recurso('sounds/enemy_shot.wav'))
     except pygame.error:
         pass
 
     # Cargar sonido de muerte
     try:
-        config.death_sound = pygame.mixer.Sound('sounds/death.wav')
+        config.death_sound = pygame.mixer.Sound(ruta_recurso('sounds/death.wav'))
     except pygame.error:
         pass
 

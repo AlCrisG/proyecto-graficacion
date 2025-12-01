@@ -6,6 +6,16 @@ from PIL import Image
 import random
 import maps
 import config
+import sys
+import os
+
+def ruta_recurso(ruta_relativa):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, ruta_relativa)
 
 # Funciones de generación de mundo
 def select_next_random_map():
@@ -80,15 +90,15 @@ def setup_opengl():
 
     # Cargar texturas
     try:
-        config.texture_ids['wall'] = load_texture('images/wall.png')
-        config.texture_ids['floor'] = load_texture('images/floor.png')
-        config.texture_ids['sky'] = load_texture('images/sky.png')
-        config.texture_ids['enemy'] = load_texture('images/enemy.png')
-        config.texture_ids['shells'] = load_texture('images/shells.png')
-        config.texture_ids['boxshells'] = load_texture('images/boxshells.png')
+        config.texture_ids['wall'] = load_texture(ruta_recurso('images/wall.png'))
+        config.texture_ids['floor'] = load_texture(ruta_recurso('images/floor.png'))
+        config.texture_ids['sky'] = load_texture(ruta_recurso('images/sky.png'))
+        config.texture_ids['enemy'] = load_texture(ruta_recurso('images/enemy.png'))
+        config.texture_ids['shells'] = load_texture(ruta_recurso('images/shells.png'))
+        config.texture_ids['boxshells'] = load_texture(ruta_recurso('images/boxshells.png'))
         
-        config.enemy_attack_frames = load_gif_animation('images/enemy_attack.gif')
-        config.reload_frames = load_gif_animation('images/reload.gif')
+        config.enemy_attack_frames = load_gif_animation(ruta_recurso('images/enemy_attack.gif'))
+        config.reload_frames = load_gif_animation(ruta_recurso('images/reload.gif'))
     except FileNotFoundError as e:
         print(e.filename)
         pygame.quit()
