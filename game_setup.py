@@ -108,7 +108,7 @@ def setup_opengl():
 def load_high_score():
     """Carga la puntuación más alta desde un archivo JSON"""
     try:
-        with open(ruta_recurso('highscore.json'), 'r') as f:
+        with open(ruta_recurso('data/highscore.json'), 'r') as f:
             data = json.load(f)
             config.high_score = data.get('high_score', 0)
     except (FileNotFoundError, json.JSONDecodeError):
@@ -119,7 +119,7 @@ def save_high_score():
     if config.score > config.high_score:
         config.high_score = config.score
         try:
-            with open(ruta_recurso('highscore.json'), 'w') as f:
+            with open(ruta_recurso('data/highscore.json'), 'w') as f:
                 json.dump({'high_score': config.high_score}, f)
-        except IOError:
-            print("Error: No se pudo guardar la puntuación más alta.")
+        except IOError as e:
+            print(e)
